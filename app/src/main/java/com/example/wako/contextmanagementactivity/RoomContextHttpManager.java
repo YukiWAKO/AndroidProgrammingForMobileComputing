@@ -26,27 +26,29 @@ public class RoomContextHttpManager {
     public ContextManagementActivity cma;
     RequestQueue queue ;
     final String CONTEXT_SERVER_URL = "https://fair-corp.cleverapps.io/api/";
+
+    public RoomContextHttpManager(ContextManagementActivity contextManagementActivity) {
+        cma = contextManagementActivity;
+    }
+
     public void init(Activity activity){
         queue = Volley.newRequestQueue(activity);
         queue.start();
     }
     ArrayList<String> roomid = new ArrayList<String>();
 
+
     public void getSpinnerInfo(){
-        System.out.println("関数入った");
         String url = CONTEXT_SERVER_URL+"rooms";
-        System.out.println("url "+url);
         final JsonArrayRequest contextRequest = new JsonArrayRequest
                 (Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        System.out.println("通信成功");
                         try{
                             for(int i =0; i < response.length();i++){
                                 JSONObject info = response.getJSONObject(i);
                                 roomid.add(info.getString("id"));
                             }
-                            System.out.println("roomid "+roomid);
                             cma.createSpinner(roomid);
                         }catch(JSONException e){
                             e.printStackTrace();
@@ -57,7 +59,7 @@ public class RoomContextHttpManager {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         //Some error to access URL : Room may not exists
-                        System.out.println("something must be wrong, error happening on volley");
+                        System.out.println("something is wrong with getSpinnerInfo");
                         System.out.println("error:"+error);
                     }
                 });
@@ -65,18 +67,17 @@ public class RoomContextHttpManager {
     }
 
     public void retrieveRoomContextState(String room){
-        String url = CONTEXT_SERVER_URL + "lights/" + room +"/";
+        String url = CONTEXT_SERVER_URL + "rooms/" + room +"/";
 
         final JsonObjectRequest contextRequest = new JsonObjectRequest
                 (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            System.out.println("response:"+response);
                                 String id = response.getString("id").toString();
                                 int lightLevel = Integer.parseInt(response.get("level").toString());
-                                String lightStatus = response.get("status").toString();
-                                RoomContextState context = new RoomContextState(id,lightStatus,lightLevel);
+                                String status = response.getString("status").toString();
+                                RoomContextState context = new RoomContextState(id, lightLevel, status);
                                 cma.onUpdate(context);
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -86,16 +87,15 @@ public class RoomContextHttpManager {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         //Some error to access URL : Room may not exists
-                        System.out.println("something must be wrong, error happening");
+                        System.out.println("something is wrong with retrieveRoomContextState");
                         System.out.println("error:"+error);
                     }
                 });
         queue.add(contextRequest);
     }
 
-    public void switchLight(RoomContextState state, String room){
-        //ちょっとこれ正しいかわからない
-        String url = CONTEXT_SERVER_URL + "lights/" + room +"/switch";
+    public void switchLight(RoomContextState state, String room){;
+        String url = CONTEXT_SERVER_URL + "rooms/" + room +"/switch";
 
         final JsonObjectRequest contextRequest = new JsonObjectRequest
                 (Request.Method.PUT, url, null, new Response.Listener<JSONObject>() {
@@ -103,11 +103,9 @@ public class RoomContextHttpManager {
                     public void onResponse(JSONObject response) {
                         try {
                             String id = response.getString("id").toString();
-                            int lightlevel = Integer.parseInt(response.getJSONObject("light").get("level").toString());
-                            String lightStatus = response.getJSONObject("light").get("status").toString();
-                            //do something with results
-                            RoomContextState context = new RoomContextState(id,lightStatus,lightlevel);
-                            //notify main activity for update
+                            int lightLevel = Integer.parseInt(response.get("level").toString());
+                            String status = response.getString("status").toString();
+                            RoomContextState context = new RoomContextState(id, lightLevel, status);
                             cma.onUpdate(context);
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -117,10 +115,40 @@ public class RoomContextHttpManager {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         //Some error to access URL : Room may not exists
+                        System.out.println("something is wrong with switchLight");
+                        System.out.println("error:"+error);
                     }
                 });
         queue.add(contextRequest);
 
+    }
+
+    public void changeLightLevel(RoomContextState state, String room, String level){
+        String url = CONTEXT_SERVER_URL + "rooms/" + room +"/changeLight/" + level;
+
+        final JsonObjectRequest contextRequest = new JsonObjectRequest
+                (Request.Method.PUT, url, null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String id = response.getString("id").toString();
+                            int lightLevel = Integer.parseInt(response.get("level").toString());
+                            String status = response.getString("status").toString();
+                            RoomContextState context = new RoomContextState(id, lightLevel, status);
+                            cma.onUpdate(context);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        //Some error to access URL : Room may not exists
+                        System.out.println("something is wrong with ChangeLightLevel");
+                        System.out.println("error:"+error);
+                    }
+                });
+        queue.add(contextRequest);
     }
 }
 

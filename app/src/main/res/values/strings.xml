@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">ContextManagementActivity</string>
-    <string name="lightlevel">light level</string>
-    <string name="enter_room">select room</string>
-    <string name="noiselevel">noise level</string>
+    <string name="lightlevel">light level   </string>
+    <string name="enter_room">select room id</string>
+    <string name="change_level_botton">change</string>
+    <string name="change_level">input number to change level</string>
     <string name="image_content_description">image content description</string>
     <string name="lightonoff">light on/off</string>
-    <string name="ringonoff">ring on/off</string>
     <string name="ok">ok</string>
 
 
